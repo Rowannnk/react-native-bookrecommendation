@@ -3,64 +3,25 @@ import User from "../models/User.js";
 
 const protectRoute = async (req, res, next) => {
   try {
-    // 1. Get and validate authorization header
-    const authHeader = req.header("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({
-        success: false,
-        message: "No authentication token provided",
-      });
-    }
+    //get token
+    const token = req.header("Authorization").replace("Bearer", "");
+    if (!token)
+      return res
+        .status(401)
+        .json({ messafe: "No authentication token , access denied" });
 
-    // 2. Extract and clean token
-    const token = authHeader.replace("Bearer", "").trim();
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid token format",
-      });
-    }
-
-    // 3. Verify token
+    //verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 4. Find user (without password)
+    //find user
     const user = await User.findById(decoded.userId).select("-password");
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "User not found",
-      });
-    }
+    if (!user) return res.status(401).json({ messafe: "Token is not valid" });
 
-    // 5. Attach user to request
     req.user = user;
     next();
   } catch (error) {
-    console.error("Authentication error:", error.message);
-
-    // Specific error handling
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({
-        success: false,
-        message: "Token expired",
-        expiredAt: error.expiredAt,
-      });
-    }
-
-    if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid token",
-        error: error.message,
-      });
-    }
-
-    return res.status(401).json({
-      success: false,
-      message: "Authentication failed",
-    });
+    console.log("Authentication error:", error.message);
+    res.status(401).json({ message: "Token is not valid" });
   }
 };
-
 export default protectRoute;
