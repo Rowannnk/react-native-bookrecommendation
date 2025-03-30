@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 console.log({ PORT });
 
 job.start();
-app.use(express.json()); // this allow us to access request from body , it is like middleware
+// app.use(express.json()); // this allow us to access request from body , it is like middleware
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
